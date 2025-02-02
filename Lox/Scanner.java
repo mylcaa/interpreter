@@ -16,6 +16,26 @@ class Scanner{
     private int current = 0;
     private int line = 1;
 
+    private static final Map<String, TokenType> keywords;
+    static {
+        keywords = new HashMap<>();
+        keywords.put("and", AND);
+        keywords.put("or", OR);
+        keywords.put("if", IF);
+        keywords.put("else", ELSE);
+        keywords.put("switch", SWITCH);
+        keywords.put("case", CASE);
+        keywords.put("for", FOR);
+        keywords.put("while", WHILE);
+        keywords.put("true", TRUE);
+        keywords.put("return", RETURN);
+        keywords.put("nil", NIL);
+        keywords.put("var", VAR);
+        keywords.put("class", CLASS);
+        keywords.put("print", PRINT);
+        keywords.put("eof", EOF);
+    }
+
     Scanner(String input): _input(input){};
 
     List<Token> scanTokens(){
@@ -105,6 +125,30 @@ class Scanner{
                 }
                 break;
         }
+    }
+
+    private boolean isAlpha(char c){
+        if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_')
+            return true;
+
+        return false
+    }
+
+    private boolean isAlphaNumeric(char c){
+        return isAlpha(c) || isDigit(c);
+    }
+
+    private void identifier(){
+
+        while(isAlphaNumeric(peek()))
+            advance();
+
+        String text = _input.substring(start, current);
+        TokenType type = keywords.get(text);
+        if(type == null)
+            type = IDENTIFIER; 
+
+        addToken(type);
     }
 
     private void string(){
