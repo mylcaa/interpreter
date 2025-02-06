@@ -1,8 +1,31 @@
 package lox;
 
-include
-
 class Interpreter implements Expr.Visitor<Object>{
+
+    void interpreter(Expr expression){
+        try{
+            Object value = evaluate(expression);
+            System.out.println(stringify(value));
+
+        }catch(RunTimeError error){
+            Lox.RunTimeError(error);
+        }
+    }
+
+    private String stringify(Object value){
+        if(value == null)
+            return "nil";
+
+        if(object instanceof Double){
+            String text = object.toString();
+            if(text.endsWith(".0"))
+                text = text.substring(0, text.length() - 2);
+            return text;
+        }
+
+        return object.toString();
+    }
+
     @Override
     public Object visitLiteralExpr(Expr.Literal expr){
         return expr.value;
@@ -19,6 +42,7 @@ class Interpreter implements Expr.Visitor<Object>{
         
         switch(expr.operator.type){
             case MINUS:
+                checkNumberOperand(expr.operator, right);
                 return -(double)right;
             case BANG:
                 return !isTruthy(right);
@@ -38,29 +62,39 @@ class Interpreter implements Expr.Visitor<Object>{
                 
                 if(right instanceof String && left instanceof String)
                     return (String)left + (String)right;
+                
+                throw new RunTimeError(expr.operator, "Operands must be numbers or strings!");
 
             case MINUS:
+                checkNumberOperands(expr.operator, left, right);
                 return (double)left - (double)right;
 
             case SLASH:
+                checkNumberOperands(expr.operator, left, right);
                 return (double)left / (double)right;
 
             case STAR:
+                checkNumberOperands(expr.operator, left, right);
                 return (double)left * (double)right;
             
             case MINUS:
+                checkNumberOperands(expr.operator, left, right);
                 return (double)left - (double)right;
 
             case GREATER:
+                checkNumberOperands(expr.operator, left, right);
                 return (double)left > (double)right;
 
             case GREATER_EQUAL:
+                checkNumberOperands(expr.operator, left, right);
                 return (double)left >= (double)right;
                 
             case LESSER:
+                checkNumberOperands(expr.operator, left, right);
                 return (double)left < (double)right;
             
             case LESSER_EQUAL:
+                checkNumberOperands(expr.operator, left, right);
                 return (double)left <= (double)right;
 
             case BANG_EQUAL:
@@ -72,6 +106,20 @@ class Interpreter implements Expr.Visitor<Object>{
         }
 
         return null;
+    }
+
+    private void checkNumberOperand(Token operator, Object operand){
+        if(operand instanceof Double)
+            return;
+
+        throw new RunTimeError(operator, "operand must be a number!");
+    }
+
+    private void checkNumberOperands(Token operator, Object operand_left, Object operand_right){
+        if(operand_left instanceof Double && operand_right instanceof Double)
+            return;
+
+        throw new RunTimeError(operator, "operand must be a number!");
     }
 
     private boolean isEqual(Object left, Object right){
