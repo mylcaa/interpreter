@@ -16,7 +16,7 @@ STRING, NUMBER, IDENTIFIER,
 //keywords
 IF, ELSE, WHILE, SWITCH, CASE, FOR,
 AND, OR,
-TRUE, RETURN, NIL, VAR, CLASS, PRINT,
+TRUE, FALSE, RETURN, NIL, VAR, CLASS, PRINT,
 
 EOF
 }
@@ -29,13 +29,14 @@ class Token{
     final int _line;       //location info
 
     //constructor
-    Token(TokenType type, String lexeme, Object literal, int line):
-    _type(type),
-    _lexeme(lexeme),
-    _literal(literal),
-    _line(line){}
+    Token(TokenType type, String lexeme, Object literal, int line){
+        this._type = type;
+        this._lexeme = lexeme;
+        this._literal = literal;
+        this._line = line;
+    }
 
     public String toString(){
-        return type + " " + lexeme + " " + literal;
+        return _type + " " + _lexeme + " " + _literal;
     }
 }

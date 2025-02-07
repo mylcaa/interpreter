@@ -10,7 +10,7 @@ import java.util.List;
 
 public class Lox {
     //variables
-    private static final interpreter interpreter = new Interpreter();
+    private static final Interpreter interpreter = new Interpreter();
     static boolean hadError = false;
     static boolean hadRunTimeError = false;
 
@@ -65,8 +65,8 @@ public class Lox {
 
     }
 
-    static void runtimeError(runtimeError error){
-        System.err.printl(error.getMessage() + "\n[line " + error.token.line + "]");
+    static void runtimeError(RuntimeError error){
+        System.err.println(error.getMessage() + "\n[line " + error.token._line + "]");
         hadRunTimeError = true;
     }
 

@@ -1,13 +1,10 @@
 package lox;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
-
-//originally imported TokenType 
-//since I smushed TokenType into Token it turned into this:
-import static lox.Token.*;
+import java.util.Map;
+import static lox.TokenType.*;
 
 class Scanner{
     private final String _input;
@@ -36,7 +33,9 @@ class Scanner{
         keywords.put("eof", EOF);
     }
 
-    Scanner(String input): _input(input){};
+    Scanner(String input){
+        _input = input;
+    }
 
     List<Token> scanTokens(){
         while(current <= _input.length()){
@@ -44,7 +43,7 @@ class Scanner{
             scanToken();
         }
 
-        _tokens.add(EOF, "", null, line);
+        _tokens.add(new Token(EOF, "", null, line));
         return _tokens;
     }
 
@@ -102,9 +101,6 @@ class Scanner{
             case '<': 
                 addToken(match('<') ? LESSER_EQUAL : LESSER);
                 break;
-            case '!': 
-                addToken(BANG);
-                break;
             case ' ': 
             case '\r':
             case '\t':
@@ -128,10 +124,8 @@ class Scanner{
     }
 
     private boolean isAlpha(char c){
-        if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_')
-            return true;
+        return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_');
 
-        return false
     }
 
     private boolean isAlphaNumeric(char c){
@@ -155,14 +149,14 @@ class Scanner{
 
         String value;
 
-        while(peek() != '"' && current <= _input.lenght()){
+        while(peek() != '"' && current <= _input.length()){
             if(peek() == '\n')
                 line++;
         
             advance();
         }
 
-        if(!(current <= _input.lenght())){
+        if(!(current <= _input.length())){
             Lox.error(line, "Unterminated string!");
             return;
         }
@@ -229,7 +223,7 @@ class Scanner{
 
     private void addToken(TokenType type, Object literal){
         String text = _input.substring(start, current);
-        _tokens.add(type, text, literal, line);
+        _tokens.add(new Token(type, text, literal, line));
     }
 }
 

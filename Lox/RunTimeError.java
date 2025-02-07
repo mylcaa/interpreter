@@ -1,9 +1,9 @@
 package lox;
 
-class RunTimeError extends RunTimeeXException{
+class RuntimeError extends RuntimeException{
     final Token token;
 
-    RunTimeError(Token token, String message){
+    RuntimeError(Token token, String message){
         //calling constructor of parent class
         super(message);
         this.token = token;

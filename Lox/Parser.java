@@ -1,16 +1,17 @@
 package lox;
 
-import java.utils.List;
-import lox.Token;
+import java.util.List;
+import static lox.TokenType.*;
 
 class Parser{
     private static class ParseError extends RuntimeException{}
 
-    final private List<TokenType> _tokens; 
-    final private int current = 0;
+    final private List<Token> _tokens; 
+    private int current = 0;
 
-    Parser(List<TokenType> tokens) :
-    _tokens(tokens){}
+    Parser(List<Token> tokens){
+        this._tokens = tokens;
+    }
 
     Expr parse(){
         try{
@@ -25,7 +26,7 @@ class Parser{
     }
 
     private Expr equality(){
-        Expr expression = comparsion();
+        Expr expression = comparison();
 
         while(match(BANG_EQUAL, EQUAL_EQUAL)){
             Token operation = previous();
@@ -77,7 +78,7 @@ class Parser{
         if(match(BANG, MINUS)){
             Token operation = previous();
             Expr right = unary();
-            return new Expr.Binary(operation, right);
+            return new Expr.Unary(operation, right);
         }
 
         return primary(); 
@@ -95,15 +96,15 @@ class Parser{
             return new Expr.Literal(null);
 
         if(match(NUMBER, STRING))
-            return new Expr.Literal(previous().literal);
+            return new Expr.Literal(previous()._literal);
         
         if(match(LEFT_PAREN)){
-            Expr exp = expression();
+            Expr expr = expression();
             consume(RIGHT_PAREN, "Expect ')' after expression.");
             return new Expr.Grouping(expr);
         }
 
-        throw errror(peek(), "Expect expression.");
+        throw error(peek(), "Expect expression.");
     }
 
     private Token consume(TokenType type, String message){
@@ -114,7 +115,7 @@ class Parser{
     }
 
     private ParseError error(Token token, String message){
-        Lox.error(token, message);
+        Lox.error(token._line, message);
         return new ParseError();
     }
 
@@ -122,10 +123,10 @@ class Parser{
         advance();
 
         while(!IsAtEnd()){
-            if(previous().type == SEMICOLON)
+            if(previous()._type == SEMICOLON)
                 return;
             
-            switch(peek().type){
+            switch(peek()._type){
                 case CLASS:
                 case VAR:
                 case FOR:
@@ -140,7 +141,7 @@ class Parser{
         }
     }
 
-    private bool match(TokenType... types){
+    private boolean match(TokenType... types){
         for(TokenType type: types){
             if(check(type)){
                 advance();
@@ -150,16 +151,12 @@ class Parser{
         return false;
     }
 
-    private bool check(TokenType type){
+    private boolean check(TokenType type){
         if(IsAtEnd())
             return false;
         
-        return peek().type == type;
+        return peek()._type == type;
 
-    }
-
-    private bool IsAtEnd(){
-        return peek().type == EOF;
     }
 
     private Token peek(){
@@ -167,14 +164,19 @@ class Parser{
     }
 
     private Token advance(){
-        if(!IsAtEnd)
+        if(!IsAtEnd())
             current++;
         
         return previous();
     }
 
+    private boolean IsAtEnd(){
+        return peek()._type == EOF;
+    }
+
+
     private Token previous(){
-        return tokens.get(current - 1);
+        return _tokens.get(current - 1);
     }
 
 }
