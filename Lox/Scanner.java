@@ -38,7 +38,7 @@ class Scanner{
     }
 
     List<Token> scanTokens(){
-        while(current <= _input.length()){
+        while(!isAtEnd()){
             start = current;
             scanToken();
         }
@@ -74,7 +74,7 @@ class Scanner{
                 break;
             case '/': 
                 if(match('/')){
-                    while(peek() != '\n' && (current <= _input.length())) 
+                    while(peek() != '\n' && !isAtEnd()) 
                         advance();
                 }else{
                     addToken(SLASH);
@@ -149,14 +149,14 @@ class Scanner{
 
         String value;
 
-        while(peek() != '"' && current <= _input.length()){
+        while(peek() != '"' && !isAtEnd()){
             if(peek() == '\n')
                 line++;
         
             advance();
         }
 
-        if(!(current <= _input.length())){
+        if(isAtEnd()){
             Lox.error(line, "Unterminated string!");
             return;
         }
@@ -195,7 +195,7 @@ class Scanner{
     }
 
     private boolean match(char expected){
-        if(current <= _input.length())
+        if(isAtEnd())
             return false;
         
         if(_input.charAt(current) != expected)
@@ -206,7 +206,7 @@ class Scanner{
     }
 
     private char peek(){
-        if(current >= _input.length()) 
+        if(isAtEnd()) 
             return '\0';
 
         return _input.charAt(current);
@@ -219,6 +219,10 @@ class Scanner{
 
     private void addToken(TokenType type){
         addToken(type, null);
+    }
+
+    private boolean isAtEnd(){
+        return current >= _input.length();
     }
 
     private void addToken(TokenType type, Object literal){
