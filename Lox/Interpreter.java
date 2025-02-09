@@ -1,16 +1,23 @@
 package lox;
 
-//makes trouble if not abstract ???
-class Interpreter implements Expr.Visitor<Object>{
+import java.util.List;
 
-    void interpret(Expr expression){
+class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
+    private Environment environment = new Environment();
+
+    void interpret(List<Stmt> statements){
         try{
-            Object value = evaluate(expression);
-            System.out.println(stringify(value));
+            for(Stmt statement: statements){
+                execute(statement);
+            }
 
         }catch(RuntimeError error){
             Lox.runtimeError(error);
         }
+    }
+
+    private void execute(Stmt statement){
+        statement.accept(this);
     }
 
     private String stringify(Object object){
@@ -25,6 +32,36 @@ class Interpreter implements Expr.Visitor<Object>{
         }
 
         return object.toString();
+    }
+
+    @Override
+    public Void visitVarStmt(Stmt.Var var){
+        Object value = null;
+
+        if(var.initializer != null){
+            value = evaluate(var.initializer);
+        }
+
+        environment.define(var.name._lexeme, value);
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print print){
+        Object value = evaluate(print.expression);
+        System.out.println(stringify(value));
+        return null;
+    }
+
+    @Override
+    public Object visitVariableExpr(Expr.Variable expr){
+        return environment.get(expr.name);
+    }
+
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt){
+        evaluate(stmt.expression);
+        return null;
     }
 
     @Override

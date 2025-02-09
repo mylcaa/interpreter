@@ -13,7 +13,7 @@ abstract class Expr {
     //R visitSuperExpr(Super expr);
     //R visitThisExpr(This expr);
     R visitUnaryExpr(Unary expr);
-    //R visitVariableExpr(Variable expr);
+    R visitVariableExpr(Variable expr);
   }
 
   // Nested Expr classes here...
@@ -196,7 +196,7 @@ abstract class Expr {
   }
 //< expr-unary
 //> expr-variable
-/*  static class Variable extends Expr {
+  static class Variable extends Expr {
     Variable(Token name) {
       this.name = name;
     }
@@ -207,7 +207,7 @@ abstract class Expr {
     }
 
     final Token name;
-  }*/
+  }
 //< expr-variable
 
   abstract <R> R accept(Visitor<R> visitor);
