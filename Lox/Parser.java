@@ -52,8 +52,21 @@ class Parser{
     private Stmt statement(){
         if(match(PRINT))
             return printStatement();
-        
+        if(match(LEFT_BRACE))
+            return new Stmt.Block(block());
+
         return expressionStatement();
+    }
+
+    private List<Stmt> block(){
+        List<Stmt> statements = new ArrayList<>();
+
+        while (!check(RIGHT_BRACE) && !IsAtEnd()){
+            statements.add(declaration());
+        }
+
+        consume(RIGHT_BRACE, "Expect '}' after block!");
+        return statements;
     }
 
     private Stmt printStatement(){
@@ -69,7 +82,25 @@ class Parser{
     }
 
     private Expr expression(){
-        return equality();
+        return assignment();
+    }
+
+    private Expr assignment(){
+        //parse the left side since "=" doesn't fit into any rule bellow
+        Expr expr = equality(); //will return only the identifier and now current = 1
+
+        if(match(EQUAL)){
+            Token equals = previous();
+            Expr value = assignment();
+
+            if(expr instanceof Expr.Variable){
+                Token name = ((Expr.Variable)expr).name;
+                return new Expr.Assign(name, value);
+            }
+
+            error(equals, "Invalid assignment target!");
+        }
+        return expr;
     }
 
     private Expr equality(){

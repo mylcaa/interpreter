@@ -1,8 +1,10 @@
 package lox;
 
+import java.util.List;
+
 abstract class Stmt {
   interface Visitor<R> {
-    //R visitBlockStmt(Block stmt);
+    R visitBlockStmt(Block stmt);
     //R visitClassStmt(Class stmt);
     R visitExpressionStmt(Expression stmt);
     //R visitFunctionStmt(Function stmt);
@@ -15,7 +17,7 @@ abstract class Stmt {
 
   // Nested Stmt classes here...
 //> stmt-block
-  /*static class Block extends Stmt {
+  static class Block extends Stmt {
     Block(List<Stmt> statements) {
       this.statements = statements;
     }
@@ -26,7 +28,7 @@ abstract class Stmt {
     }
 
     final List<Stmt> statements;
-  }*/
+  }
 //< stmt-block
 //> stmt-class
   /*static class Class extends Stmt {

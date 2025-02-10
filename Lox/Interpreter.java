@@ -20,6 +20,21 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
         statement.accept(this);
     }
 
+    private void executeBlock(List<Stmt> statements, Environment environment){
+        Environment previous = this.environment;
+        try {
+            this.environment = environment;
+
+            for(Stmt statement: statements){
+                execute(statement);
+            }
+            
+        } finally {
+            this.environment = previous;
+        }
+    
+    }
+
     private String stringify(Object object){
         if(object == null)
             return "nil";
@@ -51,6 +66,21 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
         Object value = evaluate(print.expression);
         System.out.println(stringify(value));
         return null;
+    }
+
+    @Override
+    public Void visitBlockStmt(Stmt.Block block){
+        
+        executeBlock(block.statements, new Environment(environment));
+        return null;
+    }
+
+    @Override
+    public Object visitAssignExpr(Expr.Assign expr){
+        Object value = evaluate(expr.value);
+        environment.assign(expr.name, value);
+
+        return value;
     }
 
     @Override

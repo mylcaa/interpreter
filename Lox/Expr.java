@@ -2,7 +2,7 @@ package lox;
 
 abstract class Expr {
   interface Visitor<R> {
-    //R visitAssignExpr(Assign expr);
+    R visitAssignExpr(Assign expr);
     R visitBinaryExpr(Binary expr);
     //R visitCallExpr(Call expr);
     //R visitGetExpr(Get expr);
@@ -18,7 +18,7 @@ abstract class Expr {
 
   // Nested Expr classes here...
 //> expr-assign
-  /*static class Assign extends Expr {
+  static class Assign extends Expr {
     Assign(Token name, Expr value) {
       this.name = name;
       this.value = value;
@@ -31,7 +31,7 @@ abstract class Expr {
 
     final Token name;
     final Expr value;
-  }*/
+  }
 //< expr-assign
 //> expr-binary
   static class Binary extends Expr {
