@@ -1,6 +1,7 @@
 package lox;
 
 import java.util.List;
+import static lox.TokenType.*;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     private Environment environment = new Environment();
@@ -69,6 +70,30 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     }
 
     @Override
+    public Void visitWhileStmt(Stmt.While statement){
+
+        while(isTruthy(evaluate(statement.condition))){
+            execute(statement.body);
+        }
+        
+        return null;
+    }
+
+    @Override
+    public Void visitIfStmt(Stmt.If statement){
+        
+        Object value = evaluate(statement.condition);
+
+        if(isTruthy(value)){
+            execute(statement.elseBranch);
+        }else if(statement.elseBranch != null){
+            execute(statement.elseBranch);
+        }
+       
+        return null;
+    }
+
+    @Override
     public Void visitBlockStmt(Stmt.Block block){
         
         executeBlock(block.statements, new Environment(environment));
@@ -102,6 +127,22 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     @Override
     public Object visitGroupingExpr(Expr.Grouping expr){
         return evaluate(expr.expression);
+    }
+
+    @Override
+    public Object visitLogicalExpr(Expr.Logical expr){
+        Object left = evaluate(expr.left);
+        
+        if(expr.operator._type == OR){
+            if(isTruthy(left))
+                return left; //return true -> or needs one true
+        }else{
+            if(!isTruthy(left))
+                return left; //return false -> and needs one false
+        }
+
+        //if left didn't match anything try the right
+        return evaluate(expr.right);
     }
 
     @Override
