@@ -26,6 +26,9 @@ class Parser{
 
     private Stmt declaration(){
         try{
+            if(match(CLASS))
+                return classDeclaration();
+
             if(match(FUNCT))
                 return function("function");
             
@@ -39,6 +42,22 @@ class Parser{
             synchronize();
             return null;
         }
+    }
+
+    private Stmt classDeclaration(){
+        Token name = consume(IDENTIFIER, "Expect keyword class to be followed by the name of the class.");
+        Expr.Variable superclass = null;
+
+        consume(LEFT_BRACE, "Expect '{' after class identifier.");
+        
+        List<Stmt.Function> methods = new ArrayList<>();
+        while(!match(RIGHT_BRACE) && !IsAtEnd()){
+            methods.add(function("method"));
+        }
+
+        consume(RIGHT_BRACE, "Expect '}' after class body.");
+
+        return new Stmt.Class(name, superclass, methods);
     }
 
     private Stmt.Function function(String kind){
@@ -55,7 +74,7 @@ class Parser{
             } while (match(COMMA));
         }
         consume(RIGHT_PAREN, "Expect ')' after parameters.");
-        consume(LEFT_PAREN, "Expect '{' at the beginning of " + kind + " body.");
+        consume(LEFT_BRACE, "Expect '{' at the beginning of " + kind + " body.");
 
         List<Stmt> body = block();
 
@@ -213,6 +232,9 @@ class Parser{
             if(expr instanceof Expr.Variable){
                 Token name = ((Expr.Variable)expr).name;
                 return new Expr.Assign(name, value);
+            }else if(expr instanceof Expr.Get){
+                Expr.Get get = (Expr.Get)expr;
+                return new Expr.Set(get.object, get.name, value);
             }
 
             error(equals, "Invalid assignment target!");
@@ -309,6 +331,9 @@ class Parser{
         while(true){
             if(match(LEFT_PAREN)){
                expr = finishCall(expr);        
+            }else if(match(DOT)){
+                Token name = consume(IDENTIFIER, "Expect property name after '.'.");
+                expr = new Expr.Get(expr, name);
             }else{
                 break;
             }

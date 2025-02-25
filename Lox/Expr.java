@@ -7,11 +7,11 @@ abstract class Expr {
     R visitAssignExpr(Assign expr);
     R visitBinaryExpr(Binary expr);
     R visitCallExpr(Call expr);
-    //R visitGetExpr(Get expr);
+    R visitGetExpr(Get expr);
     R visitGroupingExpr(Grouping expr);
     R visitLiteralExpr(Literal expr);
     R visitLogicalExpr(Logical expr);
-    //R visitSetExpr(Set expr);
+    R visitSetExpr(Set expr);
     //R visitSuperExpr(Super expr);
     //R visitThisExpr(This expr);
     R visitUnaryExpr(Unary expr);
@@ -72,7 +72,7 @@ abstract class Expr {
   }
 //< expr-call
 //> expr-get
- /* static class Get extends Expr {
+  static class Get extends Expr {
     Get(Expr object, Token name) {
       this.object = object;
       this.name = name;
@@ -85,7 +85,7 @@ abstract class Expr {
 
     final Expr object;
     final Token name;
-  }*/
+  }
 //< expr-get
 //> expr-grouping
   static class Grouping extends Expr {
@@ -134,7 +134,7 @@ abstract class Expr {
   }
 //< expr-logical
 //> expr-set
-/*  static class Set extends Expr {
+  static class Set extends Expr {
     Set(Expr object, Token name, Expr value) {
       this.object = object;
       this.name = name;
@@ -149,7 +149,7 @@ abstract class Expr {
     final Expr object;
     final Token name;
     final Expr value;
-  }*/
+  }
 //< expr-set
 //> expr-super
  /* static class Super extends Expr {

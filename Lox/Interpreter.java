@@ -1,9 +1,9 @@
 package lox;
 
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import static lox.TokenType.*;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
@@ -75,6 +75,15 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     }
 
     @Override
+    public Void visitClassStmt(Stmt.Class stmt){
+        environment.define(stmt.name._lexeme, null);
+        McaClass klas = new McaClass(stmt.name._lexeme);
+        environment.assign(stmt.name, klas);
+
+        return null;
+    }
+
+    @Override
     public Void visitVarStmt(Stmt.Var var){
         Object value = null;
 
@@ -139,6 +148,30 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
         
         executeBlock(block.statements, new Environment(environment));
         return null;
+    }
+
+    @Override
+    public Object visitGetExpr(Expr.Get expr){
+        Object object = evaluate(expr.object);
+        if(object instanceof McaInstance){
+            return ((McaInstance) object).get(expr.name);
+        }
+        
+        throw new RuntimeError(expr.name, "Only instances have properties.");
+    }
+
+    @Override
+    public Object visitSetExpr(Expr.Set expr){
+        Object object = evaluate(expr.object);
+
+        if(!(object instanceof McaInstance)){
+            throw new RuntimeError(expr.name, "Only instances have fields.");
+        }
+
+        Object value = evaluate(expr.value);
+        ((McaInstance) object).set(expr.name, value);
+        
+        return value;
     }
 
     @Override
