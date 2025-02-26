@@ -9,6 +9,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
     private final Interpreter interpreter; 
     private final Stack<Map<String, Boolean>> scopes = new Stack<>();
     private FunctionType currentFunction = FunctionType.NONE;
+    private ClassType currentClass = ClassType.NONE;
 
     Resolver(Interpreter interpreter){
         this.interpreter = interpreter;
@@ -16,7 +17,14 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
 
     private enum FunctionType{
         NONE,
-        FUNCTION
+        FUNCTION,
+        METHOD,
+        INIT
+    };
+
+    private enum ClassType{
+        NONE,
+        CLASS
     };
 
 
@@ -56,6 +64,19 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
             Lox.error(expr.name._line, "Can't read local var in its own initializer!");
 
         resolveLocal(expr, expr.name);
+        return null;
+    }
+
+    @Override
+    public Void visitThisExpr(Expr.This expr){
+        
+        if(currentClass == ClassType.NONE){
+            Lox.error(expr.keyword._line, "Keyword 'this' must be inside a method.");
+            return null;
+        }
+        
+        resolveLocal(expr, expr.keyword);
+
         return null;
     }
 
@@ -136,11 +157,28 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
         scopes.pop();
     }
 
-    //UNINTERESTING PARTS:
+    //------------------------------------------------------------------------------UNINTERESTING PARTS:
     @Override
     public Void visitClassStmt(Stmt.Class stmt){
+        ClassType enclosingClass = currentClass;
+        currentClass = ClassType.CLASS;
+
         declare(stmt.name);
         define(stmt.name);
+
+        beginScope();
+        scopes.peek().put("this", true);
+
+        for(Stmt.Function method: stmt.methods){
+            FunctionType declaration = FunctionType.METHOD;
+            if(method.name._lexeme.equals("init"))
+                declaration = FunctionType.INIT;
+
+            resolveFunction(method, declaration);
+        }
+
+        endScope();
+        currentClass = enclosingClass;
 
         return null;
     }
@@ -151,6 +189,10 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
        if(currentFunction == FunctionType.NONE)
             Lox.error(stmt.keyword._line, "Cannot return from top-level code!");
        
+        if(currentFunction == FunctionType.INIT)
+            Lox.error(stmt.keyword._line, "Cannot return from initializer!");
+       
+
        if(stmt.value != null)
             resolve(stmt.value);
        return null;

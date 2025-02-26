@@ -77,7 +77,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     @Override
     public Void visitClassStmt(Stmt.Class stmt){
         environment.define(stmt.name._lexeme, null);
-        McaClass klas = new McaClass(stmt.name._lexeme);
+        Map<String, McaFunction> methods = new HashMap<>();
+        for(Stmt.Function method: stmt.methods){
+            McaFunction function = new McaFunction(method, environment, method.name._lexeme.equals("init"));
+            methods.put(method.name._lexeme, function);
+        }
+
+
+        McaClass klas = new McaClass(stmt.name._lexeme, methods);
         environment.assign(stmt.name, klas);
 
         return null;
@@ -107,7 +114,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt){
-        McaCallable function = new McaFunction(stmt, environment);
+        McaCallable function = new McaFunction(stmt, environment, false);
         environment.define(stmt.name._lexeme, function);
         return null;
     }
@@ -172,6 +179,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
         ((McaInstance) object).set(expr.name, value);
         
         return value;
+    }
+
+    @Override
+    public Object visitThisExpr(Expr.This expr){
+        return lookUpVariable(expr.keyword, expr);
     }
 
     @Override

@@ -30,6 +30,8 @@ class Scanner{
         keywords.put("var", VAR);
         keywords.put("class", CLASS);
         keywords.put("print", PRINT);
+        keywords.put("funct", FUNCT);
+        keywords.put("this", THIS);
         keywords.put("eof", EOF);
     }
 

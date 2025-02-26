@@ -361,6 +361,9 @@ class Parser{
 
     private Expr primary(){
 
+        if(match(THIS))
+            return new Expr.This(previous());
+
         if(match(FALSE)) 
             return new Expr.Literal(false);
 
