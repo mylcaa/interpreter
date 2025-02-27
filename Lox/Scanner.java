@@ -1,10 +1,10 @@
-package lox;
+package mul;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import static lox.TokenType.*;
+import static mul.TokenType.*;
 
 class Scanner{
     private final String _input;
@@ -72,6 +72,12 @@ class Scanner{
             case ',': 
                 addToken(COMMA);
                 break;
+            case ':': 
+                addToken(COLON);
+                break;
+            case '?': 
+                addToken(QMARK);
+                break;
             case '.': 
                 addToken(DOT);
                 break;
@@ -84,10 +90,10 @@ class Scanner{
                 }
                 break;
             case '-': 
-                addToken(MINUS);
+                addToken(match('=') ? MINUS_EQUAL : MINUS);
                 break;
             case '+': 
-                addToken(PLUS);
+                addToken(match('=') ? PLUS_EQUAL : PLUS);
                 break;
             case '*': 
                 addToken(STAR);
@@ -120,7 +126,7 @@ class Scanner{
                 }else if(isAlpha(c)){
                     identifier();
                 }else{
-                    Lox.error(line, "Unexpected character!");
+                    Mul.error(line, "Unexpected character!");
                 }
                 break;
         }
@@ -160,7 +166,7 @@ class Scanner{
         }
 
         if(isAtEnd()){
-            Lox.error(line, "Unterminated string!");
+            Mul.error(line, "Unterminated string!");
             return;
         }
 

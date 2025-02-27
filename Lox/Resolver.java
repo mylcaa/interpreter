@@ -1,4 +1,4 @@
-package lox;
+package mul;
 
 import java.util.List;
 import java.util.Map;
@@ -68,7 +68,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
         define(stmt.name);
 
         if(stmt.superclass != null && stmt.name._lexeme.equals(stmt.superclass.name._lexeme))
-            Lox.error(stmt.superclass.name._line, "a class cannot inherit from itself.");
+            Mul.error(stmt.superclass.name._line, "a class cannot inherit from itself.");
 
         if(stmt.superclass != null){
             beginScope();
@@ -101,9 +101,9 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
     public Void visitSuperExpr(Expr.Super expr){
         
         if(currentClass == ClassType.NONE){
-            Lox.error(expr.keyword._line, "Cannot use super outside class.");
+            Mul.error(expr.keyword._line, "Cannot use super outside class.");
         }else if(currentClass == ClassType.CLASS){
-            Lox.error(expr.keyword._line, "Cannot use super inside a class that isn't a child."); 
+            Mul.error(expr.keyword._line, "Cannot use super inside a class that isn't a child."); 
         }
 
         resolveLocal(expr, expr.keyword);
@@ -113,7 +113,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
     @Override
     public Void visitVariableExpr(Expr.Variable expr){
         if(!scopes.isEmpty() && scopes.peek().get(expr.name._lexeme) == Boolean.FALSE)
-            Lox.error(expr.name._line, "Can't read local var in its own initializer!");
+            Mul.error(expr.name._line, "Can't read local var in its own initializer!");
 
         resolveLocal(expr, expr.name);
         return null;
@@ -123,7 +123,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
     public Void visitThisExpr(Expr.This expr){
         
         if(currentClass == ClassType.NONE){
-            Lox.error(expr.keyword._line, "Keyword 'this' must be inside a method.");
+            Mul.error(expr.keyword._line, "Keyword 'this' must be inside a method.");
             return null;
         }
         
@@ -171,7 +171,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
 
         Map<String, Boolean> scope = scopes.peek();
         if(scope.containsKey(name._lexeme)){
-            Lox.error(name._line, "Already have a var declaration with this name within the given scope!");
+            Mul.error(name._line, "Already have a var declaration with this name within the given scope!");
         }
 
         scope.put(name._lexeme, false);
@@ -215,10 +215,10 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
     @Override
     public Void visitReturnStmt(Stmt.Return stmt){
        if(currentFunction == FunctionType.NONE)
-            Lox.error(stmt.keyword._line, "Cannot return from top-level code!");
+            Mul.error(stmt.keyword._line, "Cannot return from top-level code!");
        
         if(currentFunction == FunctionType.INIT)
-            Lox.error(stmt.keyword._line, "Cannot return from initializer!");
+            Mul.error(stmt.keyword._line, "Cannot return from initializer!");
        
 
        if(stmt.value != null)
@@ -292,6 +292,14 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
     public Void visitBinaryExpr(Expr.Binary expr){
         resolve(expr.left);
         resolve(expr.right);
+        return null;
+    }
+
+    @Override
+    public Void visitTernaryExpr(Expr.Ternary expr){
+        resolve(expr.condition);
+        resolve(expr.thenExpr);
+        resolve(expr.elseExpr);
         return null;
     }
 

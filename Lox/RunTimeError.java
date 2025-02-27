@@ -1,4 +1,4 @@
-package lox;
+package mul;
 
 class RuntimeError extends RuntimeException{
     final Token token;

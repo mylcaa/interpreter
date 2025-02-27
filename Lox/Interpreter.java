@@ -1,10 +1,10 @@
-package lox;
+package mul;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import static lox.TokenType.*;
+import static mul.TokenType.*;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     Environment globals = new Environment();
@@ -12,7 +12,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     private final Map<Expr, Integer> locals = new HashMap<>();
 
     Interpreter(){
-        globals.define("clock", new McaCallable(){
+        globals.define("clock", new MulCallable(){
             @Override
             public int arity(){return 0;}
 
@@ -33,7 +33,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
             }
 
         }catch(RuntimeError error){
-            Lox.runtimeError(error);
+            Mul.runtimeError(error);
         }
     }
 
@@ -79,7 +79,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
         Object superclass = null;
         if(stmt.superclass != null){
             superclass = evaluate(stmt.superclass);
-            if(!(superclass instanceof McaClass))
+            if(!(superclass instanceof MulClass))
                 throw new RuntimeError(stmt.superclass.name, "superclass must be a class.");
         }
 
@@ -89,14 +89,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
             environment.define("super", superclass);
         }
 
-        Map<String, McaFunction> methods = new HashMap<>();
+        Map<String, MulFunction> methods = new HashMap<>();
         for(Stmt.Function method: stmt.methods){
-            McaFunction function = new McaFunction(method, environment, method.name._lexeme.equals("init"));
+            MulFunction function = new MulFunction(method, environment, method.name._lexeme.equals("init"));
             methods.put(method.name._lexeme, function);
         }
 
 
-        McaClass klas = new McaClass(stmt.name._lexeme, (McaClass)superclass, methods);
+        MulClass klas = new MulClass(stmt.name._lexeme, (MulClass)superclass, methods);
 
         if(superclass != null)
             environment = environment.enclosing;
@@ -130,7 +130,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt){
-        McaCallable function = new McaFunction(stmt, environment, false);
+        MulCallable function = new MulFunction(stmt, environment, false);
         environment.define(stmt.name._lexeme, function);
         return null;
     }
@@ -176,9 +176,9 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     @Override
     public Object visitSuperExpr(Expr.Super expr){
         int distance = locals.get(expr);
-        McaClass superclass = (McaClass)environment.getAt(distance, "super");
-        McaInstance object = (McaInstance)environment.getAt(distance-1, "this");
-        McaFunction method = (McaFunction)superclass.findMethod(expr.method._lexeme);
+        MulClass superclass = (MulClass)environment.getAt(distance, "super");
+        MulInstance object = (MulInstance)environment.getAt(distance-1, "this");
+        MulFunction method = (MulFunction)superclass.findMethod(expr.method._lexeme);
 
         if(method == null)
             throw new RuntimeError(expr.method, "the method " + expr.method._lexeme + " doesn't exist.");
@@ -189,8 +189,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     @Override
     public Object visitGetExpr(Expr.Get expr){
         Object object = evaluate(expr.object);
-        if(object instanceof McaInstance){
-            return ((McaInstance) object).get(expr.name);
+        if(object instanceof MulInstance){
+            return ((MulInstance) object).get(expr.name);
         }
         
         throw new RuntimeError(expr.name, "Only instances have properties.");
@@ -200,12 +200,12 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     public Object visitSetExpr(Expr.Set expr){
         Object object = evaluate(expr.object);
 
-        if(!(object instanceof McaInstance)){
+        if(!(object instanceof MulInstance)){
             throw new RuntimeError(expr.name, "Only instances have fields.");
         }
 
         Object value = evaluate(expr.value);
-        ((McaInstance) object).set(expr.name, value);
+        ((MulInstance) object).set(expr.name, value);
         
         return value;
     }
@@ -259,10 +259,10 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
             arguments.add(evaluate(argument));
         }
 
-        if(!(callee instanceof McaCallable))
+        if(!(callee instanceof MulCallable))
             throw new RuntimeError(expr.paren, "Can only call functions and classes!");
 
-        McaCallable function = (McaCallable) callee;
+        MulCallable function = (MulCallable) callee;
 
         if(arguments.size() != function.arity())
             throw new RuntimeError(expr.paren, "Expected " + function.arity() + " got " + arguments.size());
@@ -298,6 +298,18 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
                 return !isTruthy(right);
         }
         return null;
+    }
+
+    @Override
+    public Object visitTernaryExpr(Expr.Ternary expr){
+        Object condition = evaluate(expr.condition);
+        
+        if(isTruthy(condition)){
+            return evaluate(expr.thenExpr);
+        }else{
+            return evaluate(expr.elseExpr);
+        }
+
     }
 
     @Override

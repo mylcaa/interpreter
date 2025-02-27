@@ -1,9 +1,9 @@
-package lox;
+package mul;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import static lox.TokenType.*;
+import static mul.TokenType.*;
 
 class Parser{
     private static class ParseError extends RuntimeException{}
@@ -228,22 +228,59 @@ class Parser{
 
     private Expr assignment(){
         //parse the left side since "=" doesn't fit into any rule bellow
-        Expr expr = or(); //will return only the identifier and now current = 1
+        Expr expr = ternary(); //will return only the identifier and now current = 1
 
-        if(match(EQUAL)){
+        if(match(EQUAL) | match(PLUS_EQUAL) | match(MINUS_EQUAL)){
             Token equals = previous();
             Expr value = assignment();
 
             if(expr instanceof Expr.Variable){
                 Token name = ((Expr.Variable)expr).name;
+                
+                switch(equals._type){
+                    case PLUS_EQUAL:
+                        Token plus = new Token(PLUS, "+", null, name._line);
+                        value  = new Expr.Binary(expr, plus, value);
+                        break;
+                    case MINUS_EQUAL:
+                        Token minus = new Token(MINUS, "-", null, name._line);
+                        value  = new Expr.Binary(expr, minus, value);
+                        break;
+                }
                 return new Expr.Assign(name, value);
+    
             }else if(expr instanceof Expr.Get){
                 Expr.Get get = (Expr.Get)expr;
+
+                switch(equals._type){
+                    case PLUS_EQUAL:
+                        Token plus = new Token(PLUS, "+", null, get.name._line);
+                        value  = new Expr.Binary(expr, plus, value);
+                        break;
+                    case MINUS_EQUAL:
+                        Token minus = new Token(MINUS, "-", null, get.name._line);
+                        value  = new Expr.Binary(expr, minus, value);
+                        break;
+                }
                 return new Expr.Set(get.object, get.name, value);
             }
 
             error(equals, "Invalid assignment target!");
         }
+        return expr;
+    }
+
+    private Expr ternary(){
+        Expr expr = or();
+
+        if(match(QMARK)){
+            Expr thenExpr = or();
+            consume(COLON, "Expect ':' in ternary operator after the second expression.");
+            Expr elseExpr = or();
+
+            return new Expr.Ternary(expr, thenExpr, elseExpr);
+        }
+
         return expr;
     }
 
@@ -408,7 +445,7 @@ class Parser{
     }
 
     private ParseError error(Token token, String message){
-        Lox.error(token._line, message);
+        Mul.error(token._line, message);
         return new ParseError();
     }
 

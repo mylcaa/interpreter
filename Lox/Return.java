@@ -1,4 +1,4 @@
-package lox;
+package mul;
 
 class Return extends RuntimeException{
     final Object value;

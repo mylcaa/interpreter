@@ -1,4 +1,4 @@
-package lox;
+package mul;
 
 import java.util.List;
 
@@ -6,6 +6,7 @@ abstract class Expr {
   interface Visitor<R> {
     R visitAssignExpr(Assign expr);
     R visitBinaryExpr(Binary expr);
+    R visitTernaryExpr(Ternary expr);
     R visitCallExpr(Call expr);
     R visitGetExpr(Get expr);
     R visitGroupingExpr(Grouping expr);
@@ -35,6 +36,24 @@ abstract class Expr {
     final Expr value;
   }
 //< expr-assign
+//> expr-ternary
+  static class Ternary extends Expr {
+    Ternary(Expr condition, Expr thenExpr, Expr elseExpr) {
+      this.condition = condition;
+      this.thenExpr = thenExpr;
+      this.elseExpr = elseExpr;
+    }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitTernaryExpr(this);
+    }
+
+    final Expr condition;
+    final Expr thenExpr;
+    final Expr elseExpr;
+  }
+//< expr-ternary
 //> expr-binary
   static class Binary extends Expr {
     Binary(Expr left, Token operator, Expr right) {
