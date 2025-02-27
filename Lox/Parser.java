@@ -46,12 +46,17 @@ class Parser{
 
     private Stmt classDeclaration(){
         Token name = consume(IDENTIFIER, "Expect keyword class to be followed by the name of the class.");
+        
         Expr.Variable superclass = null;
+        if(match(LESSER)){
+            consume(IDENTIFIER, "Setting '<' after class name requires a following name of the parent class.");
+            superclass = new Expr.Variable(previous());
+        }
 
         consume(LEFT_BRACE, "Expect '{' after class identifier.");
         
         List<Stmt.Function> methods = new ArrayList<>();
-        while(!match(RIGHT_BRACE) && !IsAtEnd()){
+        while(!check(RIGHT_BRACE) && !IsAtEnd()){
             methods.add(function("method"));
         }
 
@@ -360,6 +365,13 @@ class Parser{
     }
 
     private Expr primary(){
+
+        if(match(SUPER)){
+            Token keyword = previous();
+            consume(DOT, "Expect '.' after keyword 'super'.");
+            Token method = consume(IDENTIFIER, "Expect field name after using keyword 'super'.");
+            return new Expr.Super(keyword, method);
+        }
 
         if(match(THIS))
             return new Expr.This(previous());

@@ -76,7 +76,19 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
 
     @Override
     public Void visitClassStmt(Stmt.Class stmt){
+        Object superclass = null;
+        if(stmt.superclass != null){
+            superclass = evaluate(stmt.superclass);
+            if(!(superclass instanceof McaClass))
+                throw new RuntimeError(stmt.superclass.name, "superclass must be a class.");
+        }
+
         environment.define(stmt.name._lexeme, null);
+        if(superclass != null){
+            environment = new Environment(environment);
+            environment.define("super", superclass);
+        }
+
         Map<String, McaFunction> methods = new HashMap<>();
         for(Stmt.Function method: stmt.methods){
             McaFunction function = new McaFunction(method, environment, method.name._lexeme.equals("init"));
@@ -84,7 +96,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
         }
 
 
-        McaClass klas = new McaClass(stmt.name._lexeme, methods);
+        McaClass klas = new McaClass(stmt.name._lexeme, (McaClass)superclass, methods);
+
+        if(superclass != null)
+            environment = environment.enclosing;
+
         environment.assign(stmt.name, klas);
 
         return null;
@@ -155,6 +171,19 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
         
         executeBlock(block.statements, new Environment(environment));
         return null;
+    }
+
+    @Override
+    public Object visitSuperExpr(Expr.Super expr){
+        int distance = locals.get(expr);
+        McaClass superclass = (McaClass)environment.getAt(distance, "super");
+        McaInstance object = (McaInstance)environment.getAt(distance-1, "this");
+        McaFunction method = (McaFunction)superclass.findMethod(expr.method._lexeme);
+
+        if(method == null)
+            throw new RuntimeError(expr.method, "the method " + expr.method._lexeme + " doesn't exist.");
+        return method.bind(object);
+
     }
 
     @Override

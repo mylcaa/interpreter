@@ -32,6 +32,7 @@ class Scanner{
         keywords.put("print", PRINT);
         keywords.put("funct", FUNCT);
         keywords.put("this", THIS);
+        keywords.put("super", SUPER);
         keywords.put("eof", EOF);
     }
 

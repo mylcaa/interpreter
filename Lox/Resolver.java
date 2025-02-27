@@ -24,7 +24,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
 
     private enum ClassType{
         NONE,
-        CLASS
+        CLASS,
+        SUBCLASS
     };
 
 
@@ -55,6 +56,57 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
             resolve(var.initializer);
         
         define(var.name);
+        return null;
+    }
+
+    @Override
+    public Void visitClassStmt(Stmt.Class stmt){
+        ClassType enclosingClass = currentClass;
+        currentClass = ClassType.CLASS;
+
+        declare(stmt.name);
+        define(stmt.name);
+
+        if(stmt.superclass != null && stmt.name._lexeme.equals(stmt.superclass.name._lexeme))
+            Lox.error(stmt.superclass.name._line, "a class cannot inherit from itself.");
+
+        if(stmt.superclass != null){
+            beginScope();
+            currentClass = ClassType.SUBCLASS;
+            scopes.peek().put("super", true);
+            resolve(stmt.superclass);
+        }
+
+        beginScope();
+        scopes.peek().put("this", true);
+
+        for(Stmt.Function method: stmt.methods){
+            FunctionType declaration = FunctionType.METHOD;
+            if(method.name._lexeme.equals("init"))
+                declaration = FunctionType.INIT;
+
+            resolveFunction(method, declaration);
+        }
+
+        endScope();
+        if(stmt.superclass != null)
+            endScope();
+            
+        currentClass = enclosingClass;
+
+        return null;
+    }
+
+    @Override
+    public Void visitSuperExpr(Expr.Super expr){
+        
+        if(currentClass == ClassType.NONE){
+            Lox.error(expr.keyword._line, "Cannot use super outside class.");
+        }else if(currentClass == ClassType.CLASS){
+            Lox.error(expr.keyword._line, "Cannot use super inside a class that isn't a child."); 
+        }
+
+        resolveLocal(expr, expr.keyword);
         return null;
     }
 
@@ -158,30 +210,6 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void>{
     }
 
     //------------------------------------------------------------------------------UNINTERESTING PARTS:
-    @Override
-    public Void visitClassStmt(Stmt.Class stmt){
-        ClassType enclosingClass = currentClass;
-        currentClass = ClassType.CLASS;
-
-        declare(stmt.name);
-        define(stmt.name);
-
-        beginScope();
-        scopes.peek().put("this", true);
-
-        for(Stmt.Function method: stmt.methods){
-            FunctionType declaration = FunctionType.METHOD;
-            if(method.name._lexeme.equals("init"))
-                declaration = FunctionType.INIT;
-
-            resolveFunction(method, declaration);
-        }
-
-        endScope();
-        currentClass = enclosingClass;
-
-        return null;
-    }
 
 
     @Override

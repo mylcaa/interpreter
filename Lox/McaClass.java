@@ -5,16 +5,21 @@ import java.util.Map;
 
 class McaClass implements McaCallable {
     final String name;
+    final McaClass superclass;
     final Map<String, McaFunction> methods;
 
-    public McaClass(String name, Map<String, McaFunction> methods) {
+    public McaClass(String name, McaClass superclass, Map<String, McaFunction> methods) {
         this.name = name;
+        this.superclass = superclass;
         this.methods = methods;
     }
 
     public McaFunction findMethod(String name){
         if(methods.containsKey(name))
             return methods.get(name);
+
+        if(superclass != null)
+            return superclass.findMethod(name);
         
         return null;
     }
